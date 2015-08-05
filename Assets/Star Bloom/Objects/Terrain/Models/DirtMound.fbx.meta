@@ -1,0 +1,119 @@
+fileFormatVersion: 2
+guid: e8c0a6f77d1fa0f42bc66bd332808e84
+ModelImporter:
+  serializedVersion: 15
+  fileIDToRecycleName:
+    100000: //RootNode
+    100002: pPlane1
+    100004: softMod10Handle
+    100006: softMod11Handle
+    100008: softMod12Handle
+    100010: softMod13Handle
+    100012: softMod14Handle
+    100014: softMod15Handle
+    100016: softMod16Handle
+    100018: softMod17Handle
+    100020: softMod18Handle
+    100022: softMod19Handle
+    100024: softMod1Handle
+    100026: softMod20Handle
+    100028: softMod21Handle
+    100030: softMod22Handle
+    100032: softMod23Handle
+    100034: softMod24Handle
+    100036: softMod25Handle
+    100038: softMod26Handle
+    100040: softMod27Handle
+    100042: softMod2Handle
+    100044: softMod3Handle
+    100046: softMod4Handle
+    100048: softMod5Handle
+    100050: softMod6Handle
+    100052: softMod7Handle
+    100054: softMod8Handle
+    100056: softMod9Handle
+    400000: //RootNode
+    400002: pPlane1
+    400004: softMod10Handle
+    400006: softMod11Handle
+    400008: softMod12Handle
+    400010: softMod13Handle
+    400012: softMod14Handle
+    400014: softMod15Handle
+    400016: softMod16Handle
+    400018: softMod17Handle
+    400020: softMod18Handle
+    400022: softMod19Handle
+    400024: softMod1Handle
+    400026: softMod20Handle
+    400028: softMod21Handle
+    400030: softMod22Handle
+    400032: softMod23Handle
+    400034: softMod24Handle
+    400036: softMod25Handle
+    400038: softMod26Handle
+    400040: softMod27Handle
+    400042: softMod2Handle
+    400044: softMod3Handle
+    400046: softMod4Handle
+    400048: softMod5Handle
+    400050: softMod6Handle
+    400052: softMod7Handle
+    400054: softMod8Handle
+    400056: softMod9Handle
+    2300000: pPlane1
+    3300000: pPlane1
+    4300000: pPlane1
+    9500000: //RootNode
+  materials:
+    importMaterials: 1
+    materialName: 0
+    materialSearch: 1
+  animations:
+    legacyGenerateAnimations: 4
+    bakeSimulation: 0
+    optimizeGameObjects: 0
+    animationCompression: 1
+    animationRotationError: .5
+    animationPositionError: .5
+    animationScaleError: .5
+    animationWrapMode: 0
+    extraExposedTransformPaths: []
+    clipAnimations: []
+    isReadable: 1
+  meshes:
+    lODScreenPercentages: []
+    globalScale: .00999999978
+    meshCompression: 0
+    addColliders: 0
+    importBlendShapes: 1
+    swapUVChannels: 0
+    generateSecondaryUV: 0
+    useFileUnits: 1
+    optimizeMeshForGPU: 1
+    weldVertices: 1
+    secondaryUVAngleDistortion: 8
+    secondaryUVAreaDistortion: 15.000001
+    secondaryUVHardAngle: 88
+    secondaryUVPackMargin: 4
+  tangentSpace:
+    normalSmoothAngle: 60
+    splitTangentsAcrossUV: 1
+    normalImportMode: 0
+    tangentImportMode: 1
+  importAnimation: 1
+  copyAvatar: 0
+  humanDescription:
+    human: []
+    skeleton: []
+    armTwist: .5
+    foreArmTwist: .5
+    upperLegTwist: .5
+    legTwist: .5
+    armStretch: .0500000007
+    legStretch: .0500000007
+    feetSpacing: 0
+    rootMotionBoneName: 
+  lastHumanDescriptionAvatarSource: {instanceID: 0}
+  animationType: 2
+  userData: 
