@@ -59,8 +59,6 @@ public class SceneTransition : MonoBehaviour
 				SceneMetadata.Instance.SceneLoadPlayerRotation = m_LoadRotation;
 			}
 
-			SceneMetadata.Instance.PrepareTransition();
-
 			WorldTime.Instance.TimePaused = false;
 			Application.LoadLevel( SceneName );
 		}
@@ -88,15 +86,10 @@ public class SceneTransition : MonoBehaviour
 	{
 		if( other.collider.tag == "Player" ) //Checks if the Player is inside the trigger
 		{
-			DoTransition();
+			m_IsTransitioning = true;
+			WorldTime.Instance.TimePaused = true;
+			m_RemainingTime = TransitionTime;
 		}
-	}
-
-	public void DoTransition()
-	{
-		m_IsTransitioning = true;
-		WorldTime.Instance.TimePaused = true;
-		m_RemainingTime = TransitionTime;
 	}
 
 	float PercentCompletion()

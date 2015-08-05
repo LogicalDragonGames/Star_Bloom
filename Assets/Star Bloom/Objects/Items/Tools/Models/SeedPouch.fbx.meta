@@ -28,9 +28,7 @@ ModelImporter:
     400020: softMod8Handle
     400022: softMod9Handle
     2300000: pSphere1
-    2300002: //RootNode
     3300000: pSphere1
-    3300002: //RootNode
     4300000: pSphere1
     9500000: //RootNode
   materials:

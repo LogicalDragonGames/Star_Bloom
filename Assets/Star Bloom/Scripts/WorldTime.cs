@@ -18,54 +18,31 @@ public class WorldTime : Singleton<WorldTime>
 	protected Console console = null;
 
 	public delegate void TimeChangedHandler( uint _val );
-	public event TimeChangedHandler MinuteElapsed;
-	public event TimeChangedHandler HourElapsed;
-	public event TimeChangedHandler DayElapsed;
-	public event TimeChangedHandler WeekElapsed;
-	public event TimeChangedHandler MonthElapsed;
-	public event TimeChangedHandler YearElapsed;
-	public event TimeChangedHandler GameDayElapsed;
+	public TimeChangedHandler MinuteElapsed;
+	public TimeChangedHandler HourElapsed;
+	public TimeChangedHandler DayElapsed;
+	public TimeChangedHandler WeekElapsed;
+	public TimeChangedHandler MonthElapsed;
+	public TimeChangedHandler YearElapsed;
 
 	public delegate void DayTimeChangedHandler( DayTimeTypes type );
 	public DayTimeChangedHandler DayTimeChanged;
 
 
-	public float Second				{ get { return settings.Second;	} }
-	public float Minute				{ get { return settings.Minute;	} }
-	public float Hour				{ get { return settings.Hour;	} }
-	public float Day				{ get { return settings.Day;	} }
-	public float Week				{ get { return settings.Week;	} }
-	public float Month				{ get { return settings.Month;	} }
-	public float Year				{ get { return settings.Year;	} }
+	public float Second			{ get { return settings.Second;	} }
+	public float Minute			{ get { return settings.Minute;	} }
+	public float Hour			{ get { return settings.Hour;	} }
+	public float Day			{ get { return settings.Day;	} }
+	public float Week			{ get { return settings.Week;	} }
+	public float Month			{ get { return settings.Month;	} }
+	public float Year			{ get { return settings.Year;	} }
 
-	protected float m_PrevGameDay = -1;
-	public float GameDay			{ get { return settings.GameDay;			} }
-	public float GameDayLapseTime	{ get { return settings.GameDayLapseTime;	} }
-
-	public float MidnightTime		{ get { return settings.MidnightTime;	} }
-	public float DawnTime			{ get { return settings.DawnTime;		} }
-	public float SunriseTime		{ get { return settings.SunriseTime;	} }
-	public float NoonTime			{ get { return settings.NoonTime;		} }
-	public float SunsetTime			{ get { return settings.SunsetTime;		} }
-	public float TwilightTime		{ get { return settings.TwilightTime;	} }
-
-	[HideInInspector]
-	public float SecondsPerMinute	{ get { return settings.SecondsPerMinute;	} }
-
-	[HideInInspector]
-	public float MinutesPerHour		{ get { return settings.MinutesPerHour;		} }
-
-	[HideInInspector]
-	public float HoursPerDay		{ get { return settings.HoursPerDay;		} }
-	
-	[HideInInspector]
-	public float DaysPerWeek		{ get { return settings.DaysPerWeek;		} }
-	
-	[HideInInspector]
-	public float WeeksPerMonth		{ get { return settings.WeeksPerMonth;		} }
-	
-	[HideInInspector]
-	public float MonthsPerYear		{ get { return settings.MonthsPerYear;		} }
+	public float MidnightTime	{ get { return settings.MidnightTime;	} }
+	public float DawnTime		{ get { return settings.DawnTime;		} }
+	public float SunriseTime	{ get { return settings.SunriseTime;	} }
+	public float NoonTime		{ get { return settings.NoonTime;		} }
+	public float SunsetTime		{ get { return settings.SunsetTime;		} }
+	public float TwilightTime	{ get { return settings.TwilightTime;	} }
 
 	public DayTimeTypes CurrentTimeType = DayTimeTypes.Midnight;
 
@@ -75,9 +52,8 @@ public class WorldTime : Singleton<WorldTime>
 		set { settings.TimePaused = value; }
 	}
 
-
 	// Use this for initialization
-	void Awake()
+	void Start()
 	{
 		GameObject sceneMaster = GameObject.Find( "SceneMaster" );
 		
@@ -91,7 +67,7 @@ public class WorldTime : Singleton<WorldTime>
 		
 		if( null == settings )
 		{
-			Debug.LogError( "Could not find WorldTimeSettings instance" );
+			Debug.LogError( "Could not find ConsoleSettings instance" );
 			return;
 		}
 
@@ -142,47 +118,8 @@ public class WorldTime : Singleton<WorldTime>
 		{
 			Debug.LogError( "Day times must be sequential!" );
 		}
-
-		HourElapsed += HandleHourElapsed;
 	}
-
-	void OnLevelWasLoaded( int level )
-	{
-		GameObject sceneMaster = GameObject.Find( "SceneMaster" );
-		
-		if( null == sceneMaster )
-		{
-			Debug.LogError ( "Could not find SceneMaster instance" );
-			return;
-		}
-		
-		WorldTimeSettings nSettings = (WorldTimeSettings) sceneMaster.GetComponent( typeof(WorldTimeSettings) );
-
-		nSettings.Clone( settings );
-		settings = nSettings;
-	}
-
-	void HandleHourElapsed (uint _val)
-	{
-		if( settings.Day == m_PrevGameDay )
-			return;
-
-		if( settings.Hour >= GameDayLapseTime )
-		{
-			uint gameDays = 1 + (uint)(_val) / (uint)settings.HoursPerDay;
-			settings.GameDay += gameDays;
-			m_PrevGameDay = settings.Day;
-			OnDelegate( GameDayElapsed, gameDays );
-		}
-	}
-
-	public void AddGameDay( uint days = 1 )
-	{
-		settings.GameDay += days;
-		m_PrevGameDay = settings.Day;
-		OnDelegate( GameDayElapsed, days );
-	}
-
+	
 	// Update is called once per frame
 	void Update()
 	{
@@ -220,9 +157,9 @@ public class WorldTime : Singleton<WorldTime>
 			uint addMins = second / (uint)settings.SecondsPerMinute;
 			settings.Second -= settings.SecondsPerMinute * addMins;
 			settings.Minute += addMins;
-
-			UpdateMinutes();
+			
 			OnDelegate( MinuteElapsed, addMins );
+			UpdateMinutes();
 
 			if( settings.DebugPrintType == WorldTimeSettings.DebugPrintTypes.OnMinute )
 				PrintToConsole();
@@ -234,13 +171,12 @@ public class WorldTime : Singleton<WorldTime>
 		if( settings.Minute >= settings.MinutesPerHour )
 		{
 			uint minute = (uint)settings.Minute;
-			uint hours = (uint)settings.Hour;
 			uint addHours = minute / (uint)settings.MinutesPerHour;
 			settings.Minute -= settings.MinutesPerHour * addHours;
 			settings.Hour += addHours;
-
-			UpdateHours();
+			
 			OnDelegate( HourElapsed, addHours );
+			UpdateHours();
 
 			if( settings.DebugPrintType == WorldTimeSettings.DebugPrintTypes.OnHour )
 				PrintToConsole();
@@ -255,9 +191,9 @@ public class WorldTime : Singleton<WorldTime>
 			uint addDays = hour / (uint)settings.HoursPerDay;
 			settings.Hour -= settings.HoursPerDay * addDays;
 			settings.Day += addDays;
-
-			UpdateDays();
+			
 			OnDelegate( DayElapsed, addDays );
+			UpdateDays();
 		}
 	}
 
@@ -270,8 +206,8 @@ public class WorldTime : Singleton<WorldTime>
 			settings.Day -= settings.DaysPerWeek * addWeeks;
 			settings.Week += addWeeks;
 			
-			UpdateWeeks();
 			OnDelegate( WeekElapsed, addWeeks );
+			UpdateWeeks();
 		}
 	}
 
@@ -284,8 +220,8 @@ public class WorldTime : Singleton<WorldTime>
 			settings.Week -= settings.WeeksPerMonth * addMonths;
 			settings.Month += addMonths;
 			
-			UpdateMonths();
 			OnDelegate( MonthElapsed, addMonths );
+			UpdateMonths();
 		}
 	}
 

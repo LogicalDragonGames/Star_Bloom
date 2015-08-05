@@ -203,9 +203,6 @@ public class Daylight : MonoBehaviour
 	{
 		DaylightTimeSetting lerp = new DaylightTimeSetting();
 
-		if( null == from || null == to )
-			return lerp;
-		
 		float absDelta = to.time - from.time;
 		float absT = t - from.time;
 		float perc = absT / absDelta;

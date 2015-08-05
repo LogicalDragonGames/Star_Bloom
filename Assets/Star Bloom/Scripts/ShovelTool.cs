@@ -1,7 +1,7 @@
 ﻿using UnityEngine;
 using System.Collections;
 
-public class ShovelTool : PlayerTool
+public class ShovelTool : Tool
 {
 	ShovelTool()
 	{

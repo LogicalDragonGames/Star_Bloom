@@ -12,10 +12,7 @@ public class WorldTimeSettings : MonoBehaviour
 	public float Hour = 0;
 	public float Minute = 0;
 	public float Second = 0;	
-
-	public float GameDay = 0;
-	public float GameDayLapseTime = 0;
-
+	
 	public float SecondsPerMinute = 60;
 	public float MinutesPerHour = 60;
 	public float HoursPerDay = 24;
@@ -43,31 +40,13 @@ public class WorldTimeSettings : MonoBehaviour
 	public bool DebugPrintTransition = false;
 	public DebugPrintTypes DebugPrintType;
 
-	public void Clone( WorldTimeSettings other )
+	// Use this for initialization
+	void Start()
 	{
-		Year = other.Year;
-		Month = other.Month;
-		Week = other.Week;
-		Day = other.Day;
-		Hour = other.Hour;
-		Minute = other.Minute;
-		Second = other.Second;
-		GameDay = other.GameDay;
-		GameDayLapseTime = other.GameDayLapseTime;
-		SecondsPerMinute = other.SecondsPerMinute;
-		MinutesPerHour = other.MinutesPerHour;
-		HoursPerDay = other.HoursPerDay;
-		DaysPerWeek = other.DaysPerWeek;
-		WeeksPerMonth = other.WeeksPerMonth;
-		MonthsPerYear = other.MonthsPerYear;
-		MidnightTime = other.MidnightTime;
-		DawnTime = other.DawnTime;
-		SunriseTime = other.SunriseTime;
-		NoonTime = other.NoonTime;
-		SunsetTime = other.SunsetTime;
-		TwilightTime = other.TwilightTime;
-		TimePaused = other.TimePaused;
-		DebugPrintTransition = other.DebugPrintTransition;
-		DebugPrintType = other.DebugPrintType;
+	}
+	
+	// Update is called once per frame
+	void Update()
+	{
 	}
 }

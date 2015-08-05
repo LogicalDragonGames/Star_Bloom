@@ -1,14 +1,8 @@
 ﻿using UnityEngine;
 using System.Collections;
-using DiaQ;
 
 public class SingletonInitializer : MonoBehaviour
 {
-	void Awake()
-	{
-		DiaQEngine.Instance.Load();
-	}
-
 	// Use this for initialization
 	void Start()
 	{

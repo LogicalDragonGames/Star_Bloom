@@ -11,11 +11,6 @@ public class ItemMap : MonoBehaviour
 		m_Categories.m_Name = "Root";
 	}
 
-	public GameObject CreateItem( string itemName )
-	{
-		return CreateItem( m_Categories, itemName );
-	}
-
 	public GameObject CreateItem( string[] categoryPath, string itemName )
 	{
 		Item item = m_Categories.GetItem( categoryPath, itemName );
@@ -25,7 +20,7 @@ public class ItemMap : MonoBehaviour
 		if( null == item.m_Prefab )
 			return null;
 		
-		return CreateItem( item );
+		return (GameObject)Instantiate( item.m_Prefab );
 	}
 
 	public GameObject CreateItem( ItemCategory category, string itemName )
@@ -37,11 +32,6 @@ public class ItemMap : MonoBehaviour
 		if( null == item.m_Prefab )
 			return null;
 		
-		return CreateItem( item );
-	}
-
-	public GameObject CreateItem( Item item )
-	{
 		return (GameObject)Instantiate( item.m_Prefab );
 	}
 }

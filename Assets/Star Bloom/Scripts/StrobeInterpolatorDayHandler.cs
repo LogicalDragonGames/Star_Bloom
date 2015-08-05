@@ -18,12 +18,6 @@ public class StrobeInterpolatorDayHandler : MonoBehaviour
 	{
 	}
 
-	void OnDestroy()
-	{
-		if( null != WorldTime.Instance )
-			WorldTime.Instance.DayTimeChanged -= DayTimeChanged;
-	}
-
 	void DayTimeChanged( WorldTime.DayTimeTypes timeType )
 	{
 		bool activateSI = false;
@@ -38,7 +32,7 @@ public class StrobeInterpolatorDayHandler : MonoBehaviour
 		{
 			strobeInterpolator = GetComponent<StrobeLightInterpolator>();
 
-			if( strobeInterpolator != null )
+			if( strobeInterpolator )
 			{
 				strobeInterpolator.Restart();
 			}

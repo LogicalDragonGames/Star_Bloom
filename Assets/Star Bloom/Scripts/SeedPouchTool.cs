@@ -1,10 +1,8 @@
 ﻿using UnityEngine;
 using System.Collections;
 
-public class SeedPouchTool : PlayerTool
+public class SeedPouchTool : Tool
 {
-	public GameObject m_CropPrefab = null;
-
 	SeedPouchTool()
 	{
 		InteractSelectionType = InteractSelectionTypes.Closest;

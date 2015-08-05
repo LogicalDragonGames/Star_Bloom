@@ -3,10 +3,10 @@ using System.Collections;
 
 public class InteractionHandler : MonoBehaviour
 {
-	public delegate void InteractionEventHandler( PlayerTool tool );
-	public event InteractionEventHandler InteractionOccurred;
+	public delegate void InteractionEventHandler( Tool tool );
+	public InteractionEventHandler InteractionOccurred;
 
-	public virtual void HandleInteraction( PlayerTool tool )
+	public void HandleInteraction( Tool tool )
 	{
 		if ( InteractionOccurred != null )
 			InteractionOccurred( tool );

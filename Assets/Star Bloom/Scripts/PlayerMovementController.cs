@@ -1,6 +1,5 @@
 ﻿using UnityEngine;
 using System.Collections;
-using Gamelogic.Grids;
 
 [RequireComponent(typeof (CharacterController))]
 public class PlayerMovementController : MonoBehaviour
@@ -9,21 +8,26 @@ public class PlayerMovementController : MonoBehaviour
 	{
 		Idle = 0,
 		Walking = 1,
-		GridLocked = 2,
+		Trotting = 2,
 		Running = 3,
 		Jumping = 4,
 	}
 	
-	public CharacterState m_CharacterState;
+	public CharacterState _characterState;
 
 	public float walkMaxAnimationSpeed = 0.75f;
+	public float trotMaxAnimationSpeed = 1.0f;
 	public float runMaxAnimationSpeed = 1.0f;
 	public float jumpAnimationSpeed = 1.15f;
 	public float landAnimationSpeed = 1.0f;
 	private Animator anim = null;
 
 	// The speed when walking
-	public float walkSpeed = 1.0f;
+	public float walkSpeed = 2.0f;
+
+	// after trotAfterSeconds of walking we trot with trotSpeed
+	public float trotSpeed = 4.0f;
+
 	// when pressing "Fire3" button (cmd) we start running
 	public float runSpeed = 6.0f;
 	
@@ -38,8 +42,9 @@ public class PlayerMovementController : MonoBehaviour
 	// The gravity in controlled descent mode
 	public float speedSmoothing = 10.0f;
 	public float rotateSpeed = 500.0f;
+	public float trotAfterSeconds = 3.0f;
 	
-	public bool canJump = false;
+	public bool canJump = true;
 
 	public bool localAxesLocked = false;
 	private Vector3 localRight = Vector3.right;
@@ -84,25 +89,16 @@ public class PlayerMovementController : MonoBehaviour
 	private float lastJumpTime = -1.0f;
 	private Vector3 inAirVelocity = Vector3.zero;
 	private float lastGroundedTime = 0.0f;
-
-	protected bool isControllable = true;
-	public bool IsControllable { get { return isControllable; } }
-
-	protected bool m_IsDisableTimed = false;
-	protected float m_DisableTimer = 0.0f;
-	protected float m_DisableDuration = 0.0f;
-
-	protected ToolFramework m_Tools = null;
+	private bool isControllable = true;
 
 	void Awake()
 	{
 		moveDirection = transform.TransformDirection(Vector3.forward).normalized;
 
 		anim = GetComponent<Animator>();
+
 		if( anim == null )
 			Debug.LogError( "Must have animator component!" );
-
-		m_Tools = GetComponent<ToolFramework>();
 	}
 
 	// Use this for initialization
@@ -115,124 +111,15 @@ public class PlayerMovementController : MonoBehaviour
 	{
 		if (!isControllable)
 		{
-			if( m_IsDisableTimed )
-			{
-				m_DisableTimer += Time.deltaTime;
-
-				if( m_DisableTimer >= m_DisableDuration )
-				{
-					isControllable = true;
-					m_IsDisableTimed = false;
-					m_DisableDuration = 0.0f;
-				}
-				else
-					return;
-			}
-			else
-				return;
+			// kill all inputs if not controllable.
+			Input.ResetInputAxes();
 		}
-
-		if( Input.GetButton( "MoveModifier" ) )
-			UpdateGridLockedMovement();
-		else if (Input.GetButtonDown ("Jump"))
+		
+		if (Input.GetButtonDown ("Jump"))
+		{
 			lastJumpButtonTime = Time.time;
-		else
-			UpdateMovement();
-
-		if( m_CharacterState != CharacterState.GridLocked )
-			if( m_Tools.m_ToolHighlight.activeSelf )
-				m_Tools.m_ToolHighlight.SetActive( false );
-
-	}
-
-	public void UpdateGridLockedMovement()
-	{
-		// Check if the player was previously grid locked
-		bool wasGridLocked = false;
-		if( m_CharacterState == CharacterState.GridLocked )
-			wasGridLocked = true;
-
-		m_CharacterState = CharacterState.GridLocked;
-
-		if( !wasGridLocked )
-		{
-			TurnToNearestAxis();
 		}
-
-		m_Tools.m_ToolHighlight.SetActive( m_Tools.m_ToolHighlightActive );
 		
-		// Apply gravity
-		// - extra power jump modifies gravity
-		// - controlledDescent mode modifies gravity
-		ApplyGravity();
-		
-		// Apply jumping logic
-		ApplyJumping();
-
-		// Calculate motion
-		Vector3 movement = new Vector3(0, verticalSpeed, 0) + inAirVelocity;
-		movement *= Time.deltaTime;
-		
-		// Move the controller
-		CharacterController controller = GetComponent<CharacterController>();
-		collisionFlags = controller.Move(movement);
-
-		anim.SetBool( "Walking", false );
-		
-		RectPoint point = WorldGridMap.Instance.GetClosestCell( transform.position );
-
-		ClampPosToCell( point );
-
-		// If we've been grid locked
-		if( wasGridLocked )				// TODO: Convert to a timed value
-		{
-			if( Input.GetButtonDown( "Vertical" ) )
-			{
-				float v = Input.GetAxisRaw("Vertical");
-				if( v != 0.0f )	// Not sure if 0 is even possible, but checking anyway
-				{
-					Vector3 direction = v > 0f ? Vector3.right : -Vector3.right;
-					Vector3 moveAmt = WorldGridMap.Instance.CellHeight * direction;
-					ClampPosToCell( WorldGridMap.Instance.GetClosestCell( transform.position + moveAmt ) );
-				}
-			}
-
-			if( Input.GetButtonDown( "Horizontal" ) )
-			{
-				float h = Input.GetAxisRaw("Horizontal");
-				if( h != 0.0f )	// Not sure if 0 is even possible, but checking anyway
-				{
-					Vector3 direction = h > 0f ? -Vector3.forward : Vector3.forward;
-					Vector3 moveAmt = WorldGridMap.Instance.CellWidth * direction;
-					ClampPosToCell( WorldGridMap.Instance.GetClosestCell( transform.position + moveAmt ) );
-				}
-			}
-		}
-	}
-
-	public void ClampPosToCell( RectPoint point )
-	{
-		Vector3 pos = WorldGridMap.Instance.GetCellPosition( point );
-
-		// Move the controller
-		CharacterController controller = GetComponent<CharacterController>();
-		collisionFlags = controller.Move(pos - transform.position);
-	}
-
-	public void TurnToNearestAxis()	// TODO: Make this happen over time...
-	{
-		Vector3 vec = transform.eulerAngles;
-		vec.y = Mathf.Round(vec.y / 90) * 90;
-		vec.y = Mathf.LerpAngle( transform.eulerAngles.y, vec.y, 1.0f );
-		transform.eulerAngles = vec;
-
-		localRight = transform.right;
-		localForward = transform.forward;
-		moveDirection = localForward;
-	}
-
-	public void UpdateMovement()
-	{
 		UpdateSmoothedMovementDirection();
 		
 		// Apply gravity
@@ -254,27 +141,31 @@ public class PlayerMovementController : MonoBehaviour
 		// ANIMATION sector
 		if( null == anim )
 			Debug.Log("BAD");
-		
+
 		if(anim)
 		{
-			float speed = walkMaxAnimationSpeed * ( moveSpeed / walkSpeed );
-
-			if( m_CharacterState == CharacterState.Walking && speed >= 1.0f )
+			if(_characterState == CharacterState.Running)
+			{
+				anim.SetBool( "Walking", false );
+				anim.SetBool( "Running", true );
+			}
+			else if(_characterState == CharacterState.Walking)
 			{
 				anim.SetBool( "Walking", true );
+				anim.SetBool( "Running", false );
 			}
 			else
 			{
 				anim.SetBool( "Walking", false );
-				anim.speed = 1.0f;
+				anim.SetBool( "Running", false );
 			}
 		}
 		// ANIMATION sector
 		
 		// Set rotation to the move direction
-		if( IsGrounded() )
+		if (IsGrounded())
 		{
-			transform.rotation = Quaternion.LookRotation( moveDirection );
+			transform.rotation = Quaternion.LookRotation(moveDirection);
 		}	
 		else
 		{
@@ -282,7 +173,7 @@ public class PlayerMovementController : MonoBehaviour
 			xzMove.y = 0;
 			if (xzMove.sqrMagnitude > 0.001)
 			{
-				transform.rotation = Quaternion.LookRotation( xzMove );
+				transform.rotation = Quaternion.LookRotation(xzMove);
 			}
 		}	
 		
@@ -301,9 +192,6 @@ public class PlayerMovementController : MonoBehaviour
 
 	public void UpdateSmoothedMovementDirection()
 	{
-		if( null == Camera.main )
-			return;
-
 		Transform cameraTransform = Camera.main.transform;
 		bool grounded = IsGrounded();
 		
@@ -370,12 +258,23 @@ public class PlayerMovementController : MonoBehaviour
 			//* We want to support analog input but make sure you cant walk faster diagonally than just forward or sideways
 			float targetSpeed = Mathf.Min(targetDirection.magnitude, 1.0f);
 			
-			m_CharacterState = CharacterState.Idle;
+			_characterState = CharacterState.Idle;
 			
-			if( isMoving || wasMoving )
+			// Pick speed modifier
+			if( Input.GetKey( KeyCode.LeftShift ) || Input.GetKey( KeyCode.RightShift ) )
+			{
+				targetSpeed *= runSpeed;
+				_characterState = CharacterState.Running;
+			}
+			/*else if (Time.time - trotAfterSeconds > walkTimeStart)
+			{
+				targetSpeed *= trotSpeed;
+				_characterState = CharacterState.Trotting;
+			}*/
+			else if( isMoving || wasMoving )
 			{
 				targetSpeed *= walkSpeed;
-				m_CharacterState = CharacterState.Walking;
+				_characterState = CharacterState.Walking;
 			}
 			
 			moveSpeed = Mathf.Lerp(moveSpeed, targetSpeed, curSmooth);
@@ -449,7 +348,7 @@ public class PlayerMovementController : MonoBehaviour
 		//lastJumpStartHeight = transform.position.y;
 		lastJumpButtonTime = -10;
 		
-		m_CharacterState = CharacterState.Jumping;
+		_characterState = CharacterState.Jumping;
 	}
 
 	public void OnControllerColliderHit(ControllerColliderHit hit)
@@ -507,41 +406,5 @@ public class PlayerMovementController : MonoBehaviour
 	public void Reset()
 	{
 		gameObject.tag = "Player";
-	}
-
-	public void SetDisabled( bool disabled = true )
-	{
-		if( anim )
-		{
-			anim.SetBool( "Walking", false );
-			anim.SetBool( "Running", false );
-		}
-
-		m_CharacterState = CharacterState.Idle;
-		Input.ResetInputAxes();
-		isMoving = false;
-		moveSpeed = 0.0f;
-		m_IsDisableTimed = false;
-		isControllable = !disabled;
-		m_DisableTimer = 0.0f;
-		m_DisableDuration = 0.0f;
-	}
-
-	public void SetTimedDisable( float duration )
-	{
-		if( anim )
-		{
-			anim.SetBool( "Walking", false );
-			anim.SetBool( "Running", false );
-		}
-
-		m_CharacterState = CharacterState.Idle;
-		Input.ResetInputAxes();
-		isMoving = false;
-		moveSpeed = 0.0f;
-		m_IsDisableTimed = true;
-		isControllable = false;
-		m_DisableTimer = 0.0f;
-		m_DisableDuration = duration;
 	}
 }

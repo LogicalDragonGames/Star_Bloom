@@ -1,25 +1,24 @@
 ﻿using UnityEngine;
 using System.Collections;
 
-public class NPC : DialogueActor
+public class NPC : MonoBehaviour
 {
-	public Relationship m_Relationship;
-	public GameObject m_Player;
-	
-	public string m_NPCName = "";
+	public string Name = "";
+	public string[] PlayerTalkMessages = {""};
+
 	public int LoseFocusSqDist = 1;
 	public float LoseFocusAngle = 20;
 
+	private GameObject m_LastKnownInteractor;
+	private Quaternion m_LastKnownInteractorRotation;
+	private Vector3 m_LastKnownInteractorPosition;
+	private bool m_IsTalking = false;
 	private Animator anim = null;
 
-	protected IsometricCamera m_Camera;
-	protected PlayerTool m_LastInteractedTool = null;
 
 	// Use this for initialization
-	new void Start()
+	void Start()
 	{
-		base.Start();
-
 		anim = GetComponent<Animator>();
 
 		InteractionHandler ih = GetComponent<InteractionHandler>();
@@ -28,98 +27,81 @@ public class NPC : DialogueActor
 			ih.InteractionOccurred += OnInteraction;
 		else
 			Debug.LogError( "Could not find 'InteractionHandler' component" );
-
-		m_Player = GameObject.FindGameObjectWithTag( "Player" );
-		m_Camera = m_Player.GetComponent<IsometricCamera>();
 	}
-
-	public override void StartTalking()
+	
+	// Update is called once per frame
+	void Update()
 	{
-		if( anim )
-			anim.SetBool( "Talking", true );
-		
-		LockPlayer();
-
-		base.StartTalking();
-	}
-
-	public override void StopTalking()
-	{
-		if( anim )
-			anim.SetBool( "Talking", false );
-		
-		UnlockPlayer();
-
-		base.StopTalking();
-	}
-
-	protected void LockPlayer()
-	{
-		m_Player.GetComponent<PlayerMovementController>().SetDisabled( true );
-	}
-
-	protected void UnlockPlayer()
-	{
-		m_Player.GetComponent<PlayerMovementController>().SetDisabled( false );
-	}
-
-	public void OnInteraction( PlayerTool tool )
-	{
-		// Ignore interactions while talking
-		if( m_IsTalking || m_WaitingForAnim || m_WaitingForCam )
-			return;
-
-		m_LastInteractedTool = tool;
-
-		PlayMakerFSM fsm = GetComponent<PlayMakerFSM>();
-
-		if( null == fsm )
-			return;
-		
-		if( m_LastInteractedTool.GetType() == typeof(HandTool) )
-			fsm.SendEvent( "HAND_TOOL_USED" );
-		else
-			fsm.SendEvent( "INTERACTED" );
-	}
-
-	public void GetHeldItem()
-	{
-		PlayMakerFSM fsm = GetComponent<PlayMakerFSM>();
-		
-		if( null != fsm )
+		if( m_IsTalking )
 		{
-			string heldItem = "";
+			if( (m_LastKnownInteractor.transform.position - m_LastKnownInteractorPosition).sqrMagnitude > LoseFocusSqDist ||
+			   !m_LastKnownInteractor.transform.rotation.AlmostEquals( m_LastKnownInteractorRotation, LoseFocusAngle ) )
+			{
+				m_IsTalking = false;
 
-			if( m_LastInteractedTool.GetType() == typeof(HandTool) )
-				heldItem = (m_LastInteractedTool as HandTool).GetHeldItem();
+				if( anim )
+					anim.SetBool( "Talking", false );
+			}
+		}
 
-			fsm.FsmVariables.GetFsmString( "HELD_ITEM" ).Value = heldItem;
+	}
+
+	string TranslateMessageArgs( string message )
+	{
+		string translated = message;
+		string playerName = "NAME_UNKNOWN";
+		string hourMinTime = WorldTime.Instance.GetHourMinuteTime();
+		
+		GameObject player = GameObject.Find( "Player" );
+		
+		if( player )
+		{
+			UserDefinitions userDefs = player.GetComponent<UserDefinitions>();
+			
+			if( userDefs )
+				playerName = userDefs.PlayerName;
+			else
+				Debug.LogError( "Could not find 'UserDefinitions' component" );
+		}
+		else
+			Debug.LogError( "Could not find 'Player' entity" );
+
+		translated = translated.Replace( "{{PLAYER}}", playerName );
+		translated = translated.Replace( "{{TIME}}", hourMinTime );
+		translated = translated.Replace( "{{NPCNAME}}", Name );
+
+		return translated;
+	}
+
+	public void OnInteraction( Tool tool )
+	{
+		if( tool.GetType() == typeof(HandTool) )
+		{
+			Talk( tool.transform.root.gameObject );
 		}
 	}
 
-	public void AddRelationshipProgress( float add )
+	public void Talk( GameObject obj )
 	{
-		m_Relationship.AddProgress( add );
-		RelationshipManager.Instance.UpdateRelationship( m_NPCName, m_Relationship );
-	}
+		if( obj.tag == "Player" )
+		{
+			m_LastKnownInteractor = obj;
+			m_LastKnownInteractorPosition = obj.transform.position;
+			m_LastKnownInteractorRotation = obj.transform.rotation;
+			m_IsTalking = true;
 
-	void SetCamTransition()
-	{
-		Matrix4x4 mat = m_Speaker.transform.localToWorldMatrix;
-		Vector3 offset = mat.MultiplyPoint3x4( m_InteractCamOffset );
-		Quaternion rot = m_Speaker.transform.rotation;
-		rot = rot * Quaternion.Euler( m_InteractCamRotation );
-		m_Camera.SetSecondaryTarget( offset, rot.eulerAngles );
-		m_Camera.SecondaryTransitionCompleted += OnCamTransitionFinished;
-		
-		m_WaitingForCam = true;
-	}
-	
-	void OnCamTransitionFinished()
-	{
-		/*m_Camera.SecondaryTransitionCompleted -= OnCamTransitionFinished;
-		m_WaitingForCam = false;
+			if( anim )
+				anim.SetBool( "Talking", true );
 
-		ContinueTalking();*/
+			string compoundMessage = "";
+
+			for( uint i = 0; i < PlayerTalkMessages.Length; ++i )
+				if( i == PlayerTalkMessages.Length - 1 )
+					compoundMessage += TranslateMessageArgs( PlayerTalkMessages[i] );	
+				else
+			compoundMessage += TranslateMessageArgs( PlayerTalkMessages[i] ) + "\n\t"; // Only newline if not the final message
+
+			Console.Instance.SendChat( Name, compoundMessage );
+		}
 	}
 }
